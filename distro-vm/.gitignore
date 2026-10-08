@@ -1,0 +1,10 @@
+*.img
+*.qcow2
+seed.iso
+SHA256SUMS
+id_vm
+id_vm.pub
+console.log
+vm.pid
+user-data
+meta-data

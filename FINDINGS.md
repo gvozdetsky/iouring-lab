@@ -131,8 +131,14 @@ Traps:
 
 ## Open points
 
-- youki rootless mode needs systemd for cgroups, so the full rootless
-  container run needs a host with systemd and a 7.x kernel.
+- ~~youki rootless mode needs systemd for cgroups, so the full rootless
+  container run needs a host with systemd and a 7.x kernel.~~ Done
+  2026-10-09 on a stock Ubuntu 26.04 cloud VM (kernel 7.0.0-34-generic,
+  systemd-managed cgroups, unprivileged user; `distro-vm/`): no policy
+  allows everything; the default profile denies netlink, BUFFER_SELECT
+  and FIXED_FILE, the rest works, in forked children too; an invalid
+  policy is refused. Ubuntu 24.04+ needs an AppArmor profile with
+  `userns,` for the youki binary to create user namespaces at all.
 - Restrictions persist across exec only since 7.2 (bc0e8faf) for tasks that
   already used io_uring; check 7.0 (Ubuntu 26.04 LTS).
 - Only rings created after registration are restricted: a ring fd passed in
