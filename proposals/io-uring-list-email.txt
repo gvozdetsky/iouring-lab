@@ -33,6 +33,11 @@ Two questions before I take this further:
 I also wrote a liburing test for the exec case (fails on 7.0, passes on
 7.2.9), which I'll send as a PR.
 
+While testing I also found that task register restrictions are skipped
+on rings created with IORING_SETUP_R_DISABLED; the fix is here:
+
+  https://lore.kernel.org/r/20261009-iouring-task-restrict-fix-v1-1-a49daf55a12c@gmail.com
+
 Test notes and scenarios: https://github.com/gvozdetsky/iouring-lab
 
 Thanks,

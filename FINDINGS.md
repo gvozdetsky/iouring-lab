@@ -36,6 +36,29 @@ that is a bypass: open a ring, exec anything.
   use a ring, exec a checker, verify the restriction survived) or a documented
   minimum (mainline 7.2, Ubuntu 7.0.0-39). To raise in the proposal.
 
+### Linux 7.0–7.3: register restrictions skipped on disabled rings
+
+A ring inherits the task restrictions when it is created, but
+`__io_uring_register()` skips the register-opcode check while the ring is
+`IORING_SETUP_R_DISABLED`. That exemption exists for per-ring restrictions,
+which the creator sets up on a disabled ring before enabling it. It also
+applied to restrictions inherited from the task: a task allowed only some
+register opcodes could create a disabled ring, run any register opcode on
+it, then enable it.
+
+- Reproduced on 7.0 and 7.2.9 as an unprivileged user with `no_new_privs`,
+  and on 7.3-rc6 (virtme-ng, root with `no_new_privs`).
+- Not affected: the SQE opcode allowlist and BPF filters. They are checked
+  at submission, after the ring is enabled. **The BPF-only runtime policy
+  proposed here is not affected.**
+- Patch sent 2026-10-09:
+  https://lore.kernel.org/r/20261009-iouring-task-restrict-fix-v1-1-a49daf55a12c@gmail.com
+  (`Fixes: ed82f35b926b`, `Cc: stable`). With it, the task's register
+  allowlist also applies to disabled rings, so enabling one needs
+  `IORING_REGISTER_ENABLE_RINGS` in the allowlist.
+- Consequence: the task register allowlist can't be relied on for kernels
+  without the fix. Another reason not to put it in a runtime policy.
+
 ## Design consequences
 
 - A runtime policy should be built from **BPF filters only**: it leaves SQE flags
@@ -114,3 +137,5 @@ Traps:
   already used io_uring; check 7.0 (Ubuntu 26.04 LTS).
 - Only rings created after registration are restricted: a ring fd passed in
   from outside the container is not. Document in the proposal.
+- Disabled-ring fix for task register restrictions: follow the patch on
+  io-uring, record the mainline commit and the stable versions once applied.

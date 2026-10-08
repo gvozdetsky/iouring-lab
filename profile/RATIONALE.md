@@ -85,7 +85,11 @@ In the 23 kCTF/kernelCTF-exploited io_uring CVEs (mostly older kernels):
 - **Register opcodes:** BPF filters can't see them. They can only be limited
   by the one-shot `IORING_REGISTER_RESTRICTIONS` allowlist. A runtime policy
   shouldn't use that allowlist, because it takes away the workload's ability
-  to restrict itself further.
+  to restrict itself further. Up to 7.3 the allowlist also doesn't hold:
+  a ring created with `IORING_SETUP_R_DISABLED` accepts any register opcode
+  until it is enabled (patch:
+  https://lore.kernel.org/r/20261009-iouring-task-restrict-fix-v1-1-a49daf55a12c@gmail.com,
+  see FINDINGS.md).
 - **Setup flags** (`SQPOLL`, `IOPOLL`, `NO_MMAP`, `DEFER_TASKRUN`, and future
   ones) can't be filtered at all. seccomp can't read
   `struct io_uring_params`, and the task restrictions don't cover setup.
