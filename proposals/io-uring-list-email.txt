@@ -1,0 +1,39 @@
+To: io-uring@vger.kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>, Christian Brauner <brauner@kernel.org>
+Subject: Using task-level io_uring restrictions in container runtimes
+
+Hi,
+
+I'm prototyping support for the 7.0 task-level io_uring restrictions in
+an OCI container runtime (youki), and proposing a matching field for the
+OCI runtime spec:
+
+  <link to runtime-spec issue>
+
+The runtime applies a policy built only from cBPF filters (an allow
+filter per permitted opcode, then IO_URING_BPF_FILTER_DENY_REST, plus a
+socket family filter) in the container's init, before seccomp and before
+capabilities are dropped. I avoided IORING_REGISTER_RESTRICTIONS for the
+runtime policy: it also denies SQE flags that aren't listed, and it can
+be registered only once per task, so the workload couldn't restrict
+itself further. BPF filters stack.
+
+Two questions before I take this further:
+
+1. Is BPF-only the intended way for a container runtime to use this, or
+   would you rather see the opcode allowlist used for the outer policy?
+
+2. On 7.0, restrictions are dropped on exec once the task has used
+   io_uring (fixed by bc0e8faf90e7, tagged for 7.1+). Ubuntu 26.04
+   carries the fix since 7.0.0-39. For runtimes this means a version
+   check is not enough to know the policy holds. Is a runtime self-test
+   (restrict, use a ring, exec, check) reasonable, or is there a better
+   way to detect a kernel with the fix?
+
+I also wrote a liburing test for the exec case (fails on 7.0, passes on
+7.2.9), which I'll send as a PR.
+
+Test notes and scenarios: <link to lab repo>
+
+Thanks,
+Eugene
