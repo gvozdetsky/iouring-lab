@@ -5,7 +5,7 @@ Y=$L/youki/target/release/youki
 STATE=/tmp/youki-state
 mkdir -p $STATE
 echo "== guest kernel $(uname -r); cgroup: $(stat -fc %T /sys/fs/cgroup)"
-for name in none deny-default allow-default deny-all invalid; do
+for name in none deny-default allow-default deny-all invalid profile allow-noflags; do
   echo
   echo "== container: $name"
   grep -o '"dev.youki.io_uring": "[^}]*}' $L/e2e/bundles/$name/config.json | sed 's/\\"/"/g' || echo "  (no policy)"

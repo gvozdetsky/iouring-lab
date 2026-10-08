@@ -44,6 +44,10 @@ A new optional `linux.ioUring` object:
 - **`socketFamilies`** *(array of strings, OPTIONAL)*: while
   `IORING_OP_SOCKET` is allowed, only these address families may be created.
   Names are as in `<sys/socket.h>`.
+- **`deniedSqeFlags`** *(array of strings, OPTIONAL)*: `IOSQE_*` flag names.
+  Any otherwise allowed operation submitted with one of these flags is denied.
+  This is mainly for `IOSQE_BUFFER_SELECT` (provided buffers, the largest
+  cluster of exploited io_uring bugs) and `IOSQE_FIXED_FILE`.
 
 Semantics:
 
@@ -77,17 +81,19 @@ with `ioUring`".
 ### Prototype and evidence
 
 - **youki prototype:** `dev.youki.io_uring` annotation with the same shape,
-  applied in container init before seccomp. Link: TODO. It has 8 unit tests,
+  applied in container init before seccomp. Link: TODO. It has 11 unit tests,
   and the end-to-end runs with real youki containers on 7.0 and 7.2.9 cover:
   - deny by default;
   - allow by default;
   - socket families;
   - deny-all;
+  - SQE flags denied (`IOSQE_BUFFER_SELECT`, `IOSQE_FIXED_FILE`);
   - an invalid policy (refused);
   - inheritance by forked processes;
   - refusal on a kernel without support (6.18).
 - **Lab:** 11 kernel-API scenarios in a VM, plus the youki scenarios and
   notes. Link: TODO.
+- **Candidate default profile** with its rationale (opcode usage survey of 15 projects, io_uring CVE history): `profile/default.json`, `profile/RATIONALE.md`. Link: TODO.
 - **liburing test:** a regression test for the exec case below. Link: TODO.
 
 ### Caveats and open questions
@@ -95,7 +101,7 @@ with `ioUring`".
 1. **Restrictions are lost on exec on 7.0 and 7.1.** If a restricted task has
    already used io_uring, its restrictions are dropped when it execs, so
    inside a container you can open a ring and exec anything.
-   - Fixed upstream in bc0e8faf90e7 (7.2), which is tagged for stable 7.1+.
+   - CVE-2026-80713, fixed upstream in bc0e8faf90e7 (7.2), which is tagged for stable 7.1+.
      Ubuntu 26.04 has it in 7.0.0-39.
    - A version check can't tell a fixed distro kernel from an unfixed one.
      Should the spec require runtimes to self-test (restrict, use a ring,

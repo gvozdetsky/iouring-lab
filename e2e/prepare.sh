@@ -41,3 +41,5 @@ mk deny-default '{"defaultAction":"deny","ops":["IORING_OP_NOP","IORING_OP_SOCKE
 mk allow-default '{"defaultAction":"allow","ops":["IORING_OP_OPENAT"],"socketFamilies":["AF_INET"]}'
 mk deny-all '{"defaultAction":"deny"}'
 mk invalid '{"defaultAction":"deny","ops":["read"]}'
+mk profile "$(python3 -c 'import json; print(json.dumps(json.load(open("'$L'/profile/default.json")), separators=(",",":")))')"
+mk allow-noflags '{"defaultAction":"allow","ops":["IORING_OP_MSG_RING"],"deniedSqeFlags":["IOSQE_BUFFER_SELECT"]}'

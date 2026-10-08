@@ -58,6 +58,25 @@ fn checks(label: &str) {
         let r = run(&mut ring, &[e.user_data(i as u64)]);
         show(name, r[0]);
     }
+    // A read with provided-buffer selection but no buffers registered: the
+    // kernel answers ENOBUFS when allowed, EACCES when a filter denies it.
+    let file = std::fs::File::open("/etc/hostname").expect("open /etc/hostname");
+    let fd = std::os::fd::AsRawFd::as_raw_fd(&file);
+    let r = run(
+        &mut ring,
+        &[opcode::Read::new(types::Fd(fd), std::ptr::null_mut(), 64)
+            .buf_group(0)
+            .build()
+            .flags(squeue::Flags::BUFFER_SELECT)
+            .user_data(200)],
+    );
+    show("read + BUFFER_SELECT", r[0]);
+    // A read on fixed file 0 with no file table: EBADF when allowed.
+    let r = run(
+        &mut ring,
+        &[opcode::Read::new(types::Fixed(0), std::ptr::null_mut(), 0).build().user_data(201)],
+    );
+    show("read + FIXED_FILE", r[0]);
     // Two NOPs linked with IOSQE_IO_LINK: exercises the SQE-flags restriction.
     let r = run(
         &mut ring,

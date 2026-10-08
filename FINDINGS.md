@@ -70,6 +70,42 @@ End-to-end (e2e/guest.sh, real youki containers on 7.2.9):
 
 All inherited by processes forked inside the container.
 
+## What mainstream software needs (input for a default profile)
+
+Source survey (2026-10-08) of PostgreSQL 18, libuv/Node.js, tokio, tokio-uring,
+monoio, compio, Netty 4.2, RocksDB, TigerBeetle, QEMU, Seastar/ScyllaDB,
+glommio, MariaDB, Ceph BlueStore and Envoy.
+
+- Opcodes used by io_uring paths that are **on by default**: READ, READV,
+  WRITE, WRITEV, FSYNC, EPOLL_CTL, POLL_ADD, POLL_REMOVE, TIMEOUT, NOP, ACCEPT,
+  CONNECT, SEND, RECV, SENDMSG, RECVMSG, CLOSE, OPENAT, STATX, ASYNC_CANCEL.
+- All opcodes used by any of them (43): the above plus READ/WRITE_FIXED,
+  TIMEOUT_REMOVE, LINK_TIMEOUT, FALLOCATE, SPLICE, PROVIDE_BUFFERS, SHUTDOWN,
+  RENAMEAT, UNLINKAT, MKDIRAT, SYMLINKAT, LINKAT, FTRUNCATE, SEND_ZC,
+  SENDMSG_ZC, SOCKET, BIND, LISTEN, PIPE, GETXATTR, FGETXATTR, READ_MULTISHOT.
+- Used by none: SYNC_FILE_RANGE, FILES_UPDATE, FADVISE, MADVISE, OPENAT2,
+  REMOVE_BUFFERS, TEE, MSG_RING, SETXATTR, FSETXATTR, URING_CMD(128), WAITID,
+  FUTEX_*, FIXED_FD_INSTALL, RECV_ZC, EPOLL_WAIT, READV/WRITEV_FIXED, NOP128.
+
+Traps:
+
+1. `IORING_REGISTER_PROBE` reports every opcode the kernel supports, ignoring
+   restrictions. tokio, compio, monoio, Seastar, Netty and glommio choose
+   their fallbacks by probing, so a denied op never triggers a fallback: it
+   fails with -EACCES at run time. **Kernel improvement to propose:** mask
+   denied opcodes in the probe result.
+2. libuv (every Node.js process) uses an EPOLL_CTL ring by default and
+   `abort()`s on an unexpected CQE error: a default profile must allow
+   EPOLL_CTL (or fail `io_uring_setup` instead).
+3. Many users set SQE flags (ASYNC, IO_LINK, HARDLINK, DRAIN, BUFFER_SELECT,
+   FIXED_FILE): the BPF-only policy leaves them alone; the opcode allowlist
+   would break them.
+4. Setup flags are not filtered by these mechanisms; liburing retries ring
+   setup only on -EINVAL.
+5. Some users have no fallback (TigerBeetle, glommio, tokio-uring, monoio's
+   IoUringDriver, PostgreSQL with io_method=io_uring): a denied op mid-run is
+   an I/O error to them.
+
 ## Open points
 
 - youki rootless mode needs systemd for cgroups, so the full rootless
