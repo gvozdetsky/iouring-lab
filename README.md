@@ -15,7 +15,7 @@ evidence behind a proposal to change that.
 | Proposal for an OCI runtime-spec `linux.ioUring` field | [proposals/runtime-spec-issue.md](proposals/runtime-spec-issue.md) |
 | Probe tools: apply restrictions to a task, check which ops a ring may run | [probe/](probe/) |
 | End-to-end runs with youki containers in a VM | [e2e/](e2e/) |
-| youki prototype | branch [`io-uring-restrictions`](https://github.com/gvozdetsky/youki/tree/io-uring-restrictions) |
+| youki prototype | draft PR [youki-dev/youki#3805](https://github.com/youki-dev/youki/pull/3805) (branch [`io-uring-restrictions`](https://github.com/gvozdetsky/youki/tree/io-uring-restrictions)) |
 
 ## Reproducing
 
