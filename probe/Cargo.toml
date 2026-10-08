@@ -1,0 +1,17 @@
+[package]
+name = "iou-probe"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+libc = "0.2"
+io-uring = "0.7"
+
+[[bin]]
+name = "iou-restrict"
+path = "src/restrict.rs"
+
+[[bin]]
+name = "iou-check"
+path = "src/check.rs"
