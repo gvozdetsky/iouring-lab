@@ -38,3 +38,6 @@ $R --nnp --bpf-allow 0,18,45 -- $R0 --socket-families 2 -- $C
 
 echo; echo "== 10. ops allowlist then BPF on top (runtime policy + app self-restriction)"
 $R --nnp --ops 0,18,45 --sqe-flags 4 -- $R0 --socket-families 2 -- $C
+
+echo; echo "== 11. exec after the restricted task used io_uring (pre-7.2 kernels dropped restrictions here)"
+$R --nnp --socket-families 2 --use-ring -- $C

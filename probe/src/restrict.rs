@@ -14,6 +14,7 @@
 //! --socket-families  cBPF filter on IORING_OP_SOCKET allowing only these
 //!              address families (e.g. 1=AF_UNIX, 2=AF_INET, 10=AF_INET6).
 //! --nnp        set PR_SET_NO_NEW_PRIVS first (required without CAP_SYS_ADMIN).
+//! --use-ring   create (and drop) an io_uring before exec.
 
 use std::ffi::CString;
 use std::io;
@@ -168,10 +169,12 @@ fn main() {
     assert!(!cmd.is_empty(), "missing command after --");
 
     let (mut nnp, mut ops, mut sqe_flags, mut bpf_allow, mut families) = (false, None, 0u8, None, None);
+    let mut use_ring = false;
     let mut it = opts.iter();
     while let Some(o) = it.next() {
         match o.as_str() {
             "--nnp" => nnp = true,
+            "--use-ring" => use_ring = true,
             "--ops" => ops = Some(parse_list(it.next().expect("--ops value"))),
             "--sqe-flags" => sqe_flags = it.next().expect("--sqe-flags value").parse().expect("mask"),
             "--bpf-allow" => bpf_allow = Some(parse_list(it.next().expect("--bpf-allow value"))),
@@ -209,6 +212,14 @@ fn main() {
             }
         }
         eprintln!("iou-restrict: bpf allowlist {allow:?} + DENY_REST");
+    }
+
+    // Use io_uring in this task before exec (gives it an io_uring task
+    // context): before 7.2, such a task dropped its restrictions on exec.
+    if use_ring {
+        let ring = io_uring::IoUring::new(4).unwrap_or_else(|e| fail("io_uring_setup", e));
+        drop(ring);
+        eprintln!("iou-restrict: used a ring before exec");
     }
 
     let prog = CString::new(cmd[0].as_str()).unwrap();

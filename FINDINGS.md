@@ -17,6 +17,25 @@ Everything below was run, not just read; scripts are in this repo.
 | 8 | BPF filters stack and only tighten | nested narrowing works, on top of BPF and on top of an opcode allowlist |
 | 9 | Feature probe: `io_uring_register(-1, BPF_FILTER, NULL, 1)` | 7.x: `EFAULT`; 6.18: `EINVAL` (older kernels: `EBADF`) |
 
+### Linux 7.0 (Ubuntu 26.04 LTS base): restrictions lost on exec
+
+Same scenarios on mainline 7.0: claims 1–9 hold, but scenario 11 fails.
+A restricted task that has used io_uring (created a ring) and then execs runs
+the new image **without restrictions**: `__io_uring_free()` on the exec path
+freed the task restriction together with the task context. Inside a container
+that is a bypass: open a ring, exec anything.
+
+- Fixed upstream in bc0e8faf90e7 "io_uring: preserve task restrictions across
+  exec" (7.2, 2026-07-30), tagged `Cc: stable # 7.1+`, so not for 7.0.y.
+- Ubuntu: absent from 7.0.0-38 (current 26.04 kernel); backported in
+  7.0.0-39.39 (in -proposed, uploaded 2026-09-24).
+- The youki e2e containers pass on 7.0 because `iou-check` itself doesn't exec
+  after using a ring; the kernel bug is still reachable by a workload.
+- Consequence: a version check can't tell a fixed 7.0/7.1 distro kernel from
+  an unfixed one. Options for runtimes: a one-off self-test (fork, restrict,
+  use a ring, exec a checker, verify the restriction survived) or a documented
+  minimum (mainline 7.2, Ubuntu 7.0.0-39). To raise in the proposal.
+
 ## Design consequences
 
 - A runtime policy should be built from **BPF filters only**: it leaves SQE flags
