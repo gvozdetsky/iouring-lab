@@ -1,0 +1,6 @@
+#!/bin/bash
+cd ~/iouring-lab/linux-7.2.9 || exit 1
+for o in NAMESPACES USER_NS PID_NS NET_NS IPC_NS UTS_NS TIME_NS CGROUPS CGROUP_PIDS MEMCG CGROUP_SCHED CGROUP_FREEZER CGROUP_DEVICE CGROUP_BPF CPUSETS SECCOMP SECCOMP_FILTER POSIX_MQUEUE OVERLAY_FS VETH BLK_CGROUP KEYS; do
+  v=$(grep -E "^CONFIG_$o=|^# CONFIG_$o is not set" .config)
+  echo "$o: ${v:-absent}"
+done
