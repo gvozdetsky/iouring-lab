@@ -1,5 +1,3 @@
-Title: Proposal: `linux.ioUring` to restrict io_uring operations (Linux 7.0+)
-
 ### Problem
 
 io_uring operations are submitted through a ring in shared memory, not as

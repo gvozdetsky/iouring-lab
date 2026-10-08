@@ -8,7 +8,7 @@ I'm prototyping support for the 7.0 task-level io_uring restrictions in
 an OCI container runtime (youki), and proposing a matching field for the
 OCI runtime spec:
 
-  <link to runtime-spec issue>
+  https://github.com/opencontainers/runtime-spec/issues/1323
 
 The runtime applies a policy built only from cBPF filters (an allow
 filter per permitted opcode, then IO_URING_BPF_FILTER_DENY_REST, plus a
@@ -33,7 +33,7 @@ Two questions before I take this further:
 I also wrote a liburing test for the exec case (fails on 7.0, passes on
 7.2.9), which I'll send as a PR.
 
-Test notes and scenarios: <link to lab repo>
+Test notes and scenarios: https://github.com/gvozdetsky/iouring-lab
 
 Thanks,
 Eugene
