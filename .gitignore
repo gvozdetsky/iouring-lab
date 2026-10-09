@@ -3,3 +3,6 @@ linux-*/
 private/
 target/
 youki/
+docs-check/docs-check
+docs-check/*.t
+docs-check/guest*.sh
