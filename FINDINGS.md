@@ -143,6 +143,8 @@ Traps:
   `userns,` for the youki binary to create user namespaces at all.
 - Restrictions persist across exec only since 7.2 (bc0e8faf) for tasks that
   already used io_uring; check 7.0 (Ubuntu 26.04 LTS).
+  Regression test merged in liburing (axboe/liburing#1652,
+  test/task-restrict-exec.c, 2026-10-09).
 - Only rings created after registration are restricted: a ring fd passed in
   from outside the container is not. Document in the proposal.
 - Disabled-ring fix for task register restrictions: applied as 6da8f402e362
