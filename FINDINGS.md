@@ -54,8 +54,8 @@ it, then enable it.
 - Patch sent 2026-10-09:
   https://lore.kernel.org/r/20261009-iouring-task-restrict-fix-v1-1-a49daf55a12c@gmail.com
   (`Fixes: ed82f35b926b`, `Cc: stable`). **Applied** by Jens Axboe on
-  2026-10-09 as commit 6da8f402e362 in his tree; on the way to mainline
-  and the stable trees. With it, the task's register
+  2026-10-09 as commit 6da8f402e362; in mainline since v7.3-rc7, stable
+  backports pending. With it, the task's register
   allowlist also applies to disabled rings, so enabling one needs
   `IORING_REGISTER_ENABLE_RINGS` in the allowlist.
 - Consequence: the task register allowlist can't be relied on for kernels
@@ -147,5 +147,5 @@ Traps:
   test/task-restrict-exec.c, 2026-10-09).
 - Only rings created after registration are restricted: a ring fd passed in
   from outside the container is not. Document in the proposal.
-- Disabled-ring fix for task register restrictions: applied as 6da8f402e362
-  (io_uring tree); record the mainline release and the stable versions.
+- Disabled-ring fix for task register restrictions: 6da8f402e362, in
+  mainline since v7.3-rc7; record the stable versions.
