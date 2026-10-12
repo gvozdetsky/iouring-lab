@@ -1,0 +1,64 @@
+To: security@kernel.org
+Cc: Jens Axboe <axboe@kernel.dk>
+Subject: io_uring: task-level register restrictions bypassed with IORING_SETUP_R_DISABLED
+
+Hi,
+
+Task-level io_uring restrictions (ed82f35b926b, "io_uring: allow
+registration of per-task restrictions", v7.0) are not enforced for
+register opcodes on rings created with IORING_SETUP_R_DISABLED. A task
+whose restrictions allow only some register opcodes can create a
+disabled ring, run any register opcode on it, then enable it.
+
+Cause: io_uring_create() copies current->io_uring_restrict into the new
+ring and sets IO_RING_F_REG_RESTRICTED (io_ctx_restriction_clone()).
+__io_uring_register() then skips the register_op check while the ring
+is still disabled:
+
+	if ((ctx->int_flags & IO_RING_F_REG_RESTRICTED) &&
+	    !(ctx->flags & IORING_SETUP_R_DISABLED)) {
+
+That exemption fits per-ring restrictions, where the ring's creator
+sets up a disabled ring before restricting and enabling it. It does not
+fit restrictions the ring inherited from a restricted task.
+
+Affected: v7.0 through v7.3-rc6 (same code in master). Reproduced on
+7.0 and 7.2.9 in a VM, as an unprivileged user with no_new_privs. The
+SQE-side opcode allowlist and the BPF filters are not affected: they are
+checked at submission, after the ring is enabled.
+
+Impact: any sandbox using task register restrictions (for example to
+deny buffer, pbuf ring or zcrx registration) can be bypassed by the
+restricted task. As far as I can tell, no container runtime or systemd
+uses task restrictions yet, so exposure today should be small.
+
+Reproducer (cc -o repro repro.c; run unprivileged):
+
+<repro.c inline here>
+
+Output on 7.2.9:
+
+	normal ring:   REGISTER_PROBE = -13 (expected -EACCES)
+	disabled ring: REGISTER_PROBE = 0 (expected -EACCES)
+	ENABLE_RINGS = 0
+	enabled ring:  REGISTER_PROBE = -13 (expected -EACCES)
+	BYPASS: register op allowed on a disabled ring
+
+Possible fix: remember that a ring's restrictions were inherited from
+the task, and keep the check for such rings while they are disabled,
+e.g. a new IO_RING_F_RESTRICT_INHERITED set in io_ctx_restriction_clone():
+
+	if ((ctx->int_flags & IO_RING_F_REG_RESTRICTED) &&
+	    (!(ctx->flags & IORING_SETUP_R_DISABLED) ||
+	     (ctx->int_flags & IO_RING_F_RESTRICT_INHERITED))) {
+
+IORING_REGISTER_ENABLE_RINGS then has to be in the task's register
+allowlist to enable such a ring, which seems right.
+
+I found this while adding support for task restrictions to an OCI
+container runtime, with the help of an AI assistant; I ran and checked
+the reproducer myself. I have not shared it publicly and will follow
+your embargo. I'm happy to test a fix or send a patch.
+
+Thanks,
+Eugene Gvozdetsky
