@@ -6,3 +6,5 @@ youki/
 docs-check/docs-check
 docs-check/*.t
 docs-check/guest*.sh
+e2e/bundles/
+e2e/rootfs/

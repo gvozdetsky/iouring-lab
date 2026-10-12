@@ -19,9 +19,9 @@ evidence behind a proposal to change that.
 
 ## Reproducing
 
-Everything runs in WSL2 or on Linux with KVM:
-- `virtme-ng` boots self-built kernels (7.0 and 7.2.9, see `build-7.0.sh`
-  and `rebuild-kernel.sh` for the config);
+Everything runs on Linux with KVM (originally WSL2):
+- `virtme-ng` boots self-built kernels; `setup-kernels.sh` fetches,
+  configures and builds 7.2.9 and 7.0 from scratch;
 - `probe/run-vm.sh <kernel tree> [guest script]` runs a script inside one.
 - `probe/vm-tests.sh` covers the kernel API;
 - `e2e/run.sh` runs youki containers with policies.

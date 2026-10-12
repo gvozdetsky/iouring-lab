@@ -2,7 +2,7 @@
 # Prepare an OCI bundle per scenario: busybox rootfs + a static iou-check.
 set -e
 L=~/iouring-lab
-. ~/.cargo/env 2>/dev/null
+[ -f ~/.cargo/env ] && . ~/.cargo/env
 cd $L/probe
 RUSTFLAGS="-C target-feature=+crt-static" cargo build --release --target x86_64-unknown-linux-gnu --bin iou-check 2>&1 | grep -E "^(warning|error)|Finished"
 CHECK=$L/probe/target/x86_64-unknown-linux-gnu/release/iou-check
